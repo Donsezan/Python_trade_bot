@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  trading-bot:
+    build: .
+    container_name: trading-bot
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - ./trading_bot.db:/app/trading_bot.db
+    command: python main.py

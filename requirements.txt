@@ -1,3 +1,8 @@
 ccxt
 PyYAML
 SQLAlchemy
+requests
+beautifulsoup4
+openai
+google-generativeai
+dashscope
