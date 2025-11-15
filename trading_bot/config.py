@@ -2,71 +2,53 @@ import yaml
 from typing import Dict, Any
 
 class Config:
-    """Loads and provides access to the application's configuration."""
+    """A class to manage the application's configuration."""
 
-    def __init__(self, config_path: str = "config.yaml"):
+    def __init__(self, config_path: str = 'config.yaml'):
         """
-        Initialize the Config object.
+        Initialize the Config class.
 
         Args:
             config_path: The path to the configuration file.
         """
-        self.config = self._load_config(config_path)
-
-    def _load_config(self, config_path: str) -> Dict[str, Any]:
-        """
-        Load the configuration from a YAML file.
-
-        Args:
-            config_path: The path to the YAML configuration file.
-
-        Returns:
-            A dictionary containing the configuration.
-        """
         try:
-            with open(config_path, "r") as f:
-                return yaml.safe_load(f)
+            with open(config_path, 'r') as f:
+                self.config = yaml.safe_load(f)
         except FileNotFoundError:
-            raise Exception(f"Configuration file not found at: {config_path}")
+            raise Exception(f"Configuration file not found at {config_path}")
         except yaml.YAMLError as e:
-            raise Exception(f"Error parsing configuration file: {e}")
+            raise Exception(f"Error parsing YAML file: {e}")
 
-    def get(self, key: str, default: Any = None) -> Any:
-        """
-        Get a configuration value by key.
+    def get_llm_provider(self) -> str:
+        """Get the configured LLM provider."""
+        return self.config.get('llm_provider', 'native')
 
-        Args:
-            key: The key to look up in the configuration.
-            default: The default value to return if the key is not found.
+    def get_llm_config(self) -> Dict[str, Any]:
+        """Get the configuration for the selected LLM provider."""
+        provider = self.get_llm_provider()
+        if provider == 'openrouter':
+            return self.config.get('openrouter', {})
+        else:
+            return self.config.get('native_llms', {})
 
-        Returns:
-            The configuration value.
-        """
-        return self.config.get(key, default)
-
-    def get_binance_config(self) -> Dict[str, str]:
+    def get_binance_config(self) -> Dict[str, Any]:
         """Get the Binance API configuration."""
-        return self.get("binance", {})
-
-    def get_llm_config(self) -> Dict[str, Dict[str, str]]:
-        """Get the LLM API configurations."""
-        return self.get("llms", {})
+        return self.config.get('binance', {})
 
     def get_trading_config(self) -> Dict[str, Any]:
         """Get the trading parameters."""
-        return self.get("trading", {})
+        return self.config.get('trading', {})
 
-    def get_database_config(self) -> Dict[str, str]:
-        """Get the database settings."""
-        return self.get("database", {})
+    def get_database_config(self) -> Dict[str, Any]:
+        """Get the database configuration."""
+        return self.config.get('database', {})
 
     def get_news_config(self) -> Dict[str, Any]:
         """Get the news sources configuration."""
-        return self.get("news", {})
+        return self.config.get('news', {})
 
-    def get_risk_management_config(self) -> Dict[str, float]:
-        """Get the risk management configuration."""
-        return self.get("risk_management", {})
+    def get_risk_management_config(self) -> Dict[str, Any]:
+        """Get the risk management settings."""
+        return self.config.get('risk_management', {})
 
-# Create a global config instance
 config = Config()

@@ -12,13 +12,33 @@ class LLMDecisionEngine(DecisionEngineInterface):
     """Makes trading decisions using a multi-LLM debate."""
 
     def __init__(self):
-        """Initialize the DecisionEngine and the LLM clients."""
-        llm_config = config.get_llm_config()
+        """Initialize the DecisionEngine and the LLM clients based on the config."""
+        self.provider = config.get_llm_provider()
+        self.llm_config = config.get_llm_config()
 
-        self.openai_client = openai.OpenAI(api_key=llm_config.get("openai", {}).get("api_key"))
-        genai.configure(api_key=llm_config.get("gemini", {}).get("api_key"))
-        self.gemini_model = genai.GenerativeModel('gemini-pro')
-        self.qwen_api_key = llm_config.get("qwen3", {}).get("api_key")
+        if self.provider == 'openrouter':
+            self.openai_model_name = self.llm_config.get("openai", {}).get("model_name")
+            self.gemini_model_name = self.llm_config.get("gemini", {}).get("model_name")
+            self.qwen_model_name = self.llm_config.get("qwen", {}).get("model_name")
+
+            # For OpenRouter, we can use a generic client based on the OpenAI SDK
+            self.openai_client = openai.OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=self.llm_config.get("openai", {}).get("api_key")
+            )
+            self.gemini_client = openai.OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=self.llm_config.get("gemini", {}).get("api_key")
+            )
+            self.qwen_client = openai.OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=self.llm_config.get("qwen", {}).get("api_key")
+            )
+        else:  # Native clients
+            self.openai_client = openai.OpenAI(api_key=self.llm_config.get("openai", {}).get("api_key"))
+            genai.configure(api_key=self.llm_config.get("gemini", {}).get("api_key"))
+            self.gemini_model = genai.GenerativeModel('gemini-pro')
+            self.qwen_api_key = self.llm_config.get("qwen", {}).get("api_key")
 
     def decide(self, context: Dict[str, Any]) -> Decision:
         """
@@ -56,29 +76,41 @@ class LLMDecisionEngine(DecisionEngineInterface):
         """
 
     def _get_openai_response(self, history: List[Dict]) -> str:
-        """Get a response from the OpenAI model."""
+        """Get a response from the OpenAI model, either native or via OpenRouter."""
         try:
             messages = [{"role": msg["role"], "content": msg["content"]} for msg in history]
-            response = self.openai_client.chat.completions.create(model="gpt-4-turbo", messages=messages)
+            model_name = self.openai_model_name if self.provider == 'openrouter' else "gpt-4-turbo"
+
+            response = self.openai_client.chat.completions.create(model=model_name, messages=messages)
             return response.choices[0].message.content
         except Exception as e:
             return f"Error from OpenAI: {e}"
 
     def _get_gemini_response(self, history: List[Dict]) -> str:
-        """Get a response from the Gemini model."""
+        """Get a response from the Gemini model, either native or via OpenRouter."""
         try:
-            contents = [{"role": "user" if msg["role"] == "user" else "model", "parts": [{"text": msg["content"]}]} for msg in history]
-            response = self.gemini_model.generate_content(contents)
-            return response.text
+            if self.provider == 'openrouter':
+                messages = [{"role": msg["role"], "content": msg["content"]} for msg in history]
+                response = self.gemini_client.chat.completions.create(model=self.gemini_model_name, messages=messages)
+                return response.choices[0].message.content
+            else:
+                contents = [{"role": "user" if msg["role"] == "user" else "model", "parts": [{"text": msg["content"]}]} for msg in history]
+                response = self.gemini_model.generate_content(contents)
+                return response.text
         except Exception as e:
             return f"Error from Gemini: {e}"
 
     def _get_qwen_response(self, history: List[Dict]) -> str:
-        """Get a response from the Qwen model."""
+        """Get a response from the Qwen model, either native or via OpenRouter."""
         try:
-            messages = [{"role": msg["role"], "content": msg["content"]} for msg in history]
-            response = Generation.call(model="qwen-turbo", messages=messages, api_key=self.qwen_api_key)
-            return response.output.text
+            if self.provider == 'openrouter':
+                messages = [{"role": msg["role"], "content": msg["content"]} for msg in history]
+                response = self.qwen_client.chat.completions.create(model=self.qwen_model_name, messages=messages)
+                return response.choices[0].message.content
+            else:
+                messages = [{"role": msg["role"], "content": msg["content"]} for msg in history]
+                response = Generation.call(model="qwen-turbo", messages=messages, api_key=self.qwen_api_key)
+                return response.output.text
         except Exception as e:
             return f"Error from Qwen: {e}"
 
