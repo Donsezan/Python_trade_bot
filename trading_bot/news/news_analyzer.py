@@ -1,7 +1,6 @@
-import hashlib
-from datetime import datetime
-from trading_bot.persistence.sqlite_persistence import NewsRAG, persistence
 from typing import List, Dict
+from trading_bot.rag_store.chromadb_service import chroma_db_service
+from datetime import datetime
 
 class NewsAnalyzer:
     """Analyzes and processes news articles."""
@@ -18,28 +17,14 @@ class NewsAnalyzer:
             articles: A list of news articles.
         """
         for article in articles:
-            fingerprint = self._generate_fingerprint(article["title"])
-
-            session = persistence.get_session()
-            existing_article = session.query(NewsRAG).filter_by(fingerprint=fingerprint).first()
-            session.close()
-
-            if not existing_article:
+            if not chroma_db_service.is_news_present(article["title"]):
                 summary = self._generate_summary(article.get("content", ""))
-                news_record = NewsRAG(
+                chroma_db_service.add_news(
                     title=article["title"],
                     summary=summary,
                     source=article["source"],
-                    published_at=datetime.now(),
-                    fingerprint=fingerprint,
+                    published_at=datetime.now()
                 )
-                persistence.save(news_record)
-
-    def _generate_fingerprint(self, title: str) -> str:
-        """
-        Generate a unique fingerprint for a news article based on its title.
-        """
-        return hashlib.sha256(title.encode('utf-8')).hexdigest()
 
     def _generate_summary(self, content: str) -> str:
         """

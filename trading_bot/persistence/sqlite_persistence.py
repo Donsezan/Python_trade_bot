@@ -50,17 +50,6 @@ class Cycle(Base):
     def SetLogs(self, logs: str):
         self.logs = logs
 
-class NewsRAG(Base):
-    __tablename__ = 'news_rag'
-    id = Column(Integer, primary_key=True)
-    title = Column(Text)
-    summary = Column(Text)
-    source = Column(String)
-    published_at = Column(DateTime)
-    fingerprint = Column(String, unique=True)
-    embedding = Column(LargeBinary, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-
 class IndicatorCache(Base):
     __tablename__ = 'indicators_cache'
     id = Column(Integer, primary_key=True)
