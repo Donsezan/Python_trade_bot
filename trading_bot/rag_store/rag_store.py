@@ -1,5 +1,5 @@
-from typing import List
-from trading_bot.persistence.sqlite_persistence import NewsRAG, persistence
+from typing import List, Dict
+from trading_bot.rag_store.chromadb_service import chroma_db_service
 
 class RAGStore:
     """Provides an interface to the RAG store."""
@@ -8,7 +8,7 @@ class RAGStore:
         """Initialize the RAGStore."""
         pass
 
-    def get_latest_news(self, k: int = 5) -> List[NewsRAG]:
+    def get_latest_news(self, k: int = 5) -> List[Dict]:
         """
         Get the k most recent news articles from the RAG store.
 
@@ -16,12 +16,8 @@ class RAGStore:
             k: The number of news articles to retrieve.
 
         Returns:
-            A list of NewsRAG objects.
+            A list of dictionaries containing the latest news articles.
         """
-        session = persistence.get_session()
-        try:
-            return session.query(NewsRAG).order_by(NewsRAG.published_at.desc()).limit(k).all()
-        finally:
-            session.close()
+        return chroma_db_service.get_latest_news(k)
 
 rag_store = RAGStore()
