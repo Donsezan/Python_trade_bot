@@ -1,18 +1,16 @@
 import yaml
 from typing import Dict, Any
+from pathlib import Path
 
 class Config:
     """A class to manage the application's configuration."""
 
     def __init__(self, config_path: str = 'config.yaml'):
-        """
-        Initialize the Config class.
-
-        Args:
-            config_path: The path to the configuration file.
-        """
         try:
-            with open(config_path, 'r') as f:
+            cfg_path = Path(config_path)
+            if not cfg_path.is_absolute():
+                cfg_path = Path(__file__).resolve().parent / cfg_path
+            with cfg_path.open('r') as f:
                 self.config = yaml.safe_load(f)
         except FileNotFoundError:
             raise Exception(f"Configuration file not found at {config_path}")

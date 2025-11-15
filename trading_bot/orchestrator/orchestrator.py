@@ -1,3 +1,4 @@
+from datetime import datetime
 import time
 from trading_bot.config import config
 from trading_bot.logging.logger import logger
@@ -63,12 +64,14 @@ class Orchestrator:
             # 6. Execute the trade
             execution_manager.execute_trade(decision)
 
-            cycle.status = "completed"
+            cycle.SetStatus("completed")
+            cycle.SetEnded_at(datetime.now())
             persistence.save(cycle)
             logger.info("Trading cycle completed successfully.")
 
         except Exception as e:
-            cycle.status = "failed"
-            cycle.logs = str(e)
+            cycle.SetStatus("failed")
+            cycle.SetEnded_at(datetime.now())
+            cycle.SetLogs(str(e))
             persistence.save(cycle)
             logger.error(f"Trading cycle failed: {e}")

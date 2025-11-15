@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, 
 from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 from trading_bot.config import config
+import os
 
 Base = declarative_base()
 
@@ -37,8 +38,17 @@ class Cycle(Base):
     id = Column(Integer, primary_key=True)
     started_at = Column(DateTime, default=datetime.now)
     ended_at = Column(DateTime)
-    status = Column(String)
+    status = Column(String, default='created', nullable=False)
     logs = Column(Text)
+    
+    def SetStatus(self, status: str):
+        self.status = status
+
+    def SetEnded_at(self, ended_at: datetime):
+        self.ended_at = ended_at
+
+    def SetLogs(self, logs: str):
+        self.logs = logs
 
 class NewsRAG(Base):
     __tablename__ = 'news_rag'
@@ -72,7 +82,7 @@ class SQLitePersistence:
     def __init__(self, db_path: str = None):
         """Initialize the SQLitePersistence layer."""
         if db_path is None:
-            db_path = config.get_database_config().get('path', 'trading_bot.db')
+            db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'trading_bot.db')
         self.engine = create_engine(f'sqlite:///{db_path}')
         Base.metadata.create_all(self.engine)
         self.Session = sessionmaker(bind=self.engine)
