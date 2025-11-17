@@ -38,12 +38,12 @@ class Orchestrator:
         try:
             # 1. Fetch market data
             symbol = self.trading_config.get("symbol", "BTC/USDT")
-            timeframe = self.trading_config.get("timeframe", "1h")
-            candles = market_data_manager.get_latest_candles(symbol, timeframe)
+            timeframes = ["1h", "4h", "1d"]
+            candles = {tf: market_data_manager.get_latest_candles(symbol, tf) for tf in timeframes}
             ticker = market_data_manager.get_current_quote(symbol)
 
-            # 2. Compute indicators (stubs)
-            indicators = indicators_engine.get_all_indicators(symbol, timeframe)
+            # 2. Compute indicators
+            indicators = {tf: indicators_engine.get_all_indicators(candles[tf]) for tf in timeframes}
 
             # 3. Ingest and analyze news
             news_articles = news_ingestor.fetch_cointelegraph_news()
