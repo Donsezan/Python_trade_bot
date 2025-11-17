@@ -2,13 +2,13 @@ from datetime import datetime
 import time
 from trading_bot.config import config
 from trading_bot.logging.logger import logger
-from trading_bot.market_data.market_data_manager import market_data_manager
+from trading_bot.market_data.market_data_manager import MarketDataManager
 from trading_bot.indicators.indicators_engine import indicators_engine
 from trading_bot.news.news_ingestor import news_ingestor
 from trading_bot.news.news_analyzer import news_analyzer
 from trading_bot.rag_store.rag_store import rag_store
 from trading_bot.decision_engine.llm_decision_engine import decision_engine
-from trading_bot.execution.execution_manager import execution_manager
+from trading_bot.execution.execution_manager import ExecutionManager
 from trading_bot.persistence.sqlite_persistence import persistence, Cycle
 
 class Orchestrator:
@@ -19,6 +19,8 @@ class Orchestrator:
         self.backtesting = backtesting
         self.trading_config = config.get_trading_config()
         self.cycle_interval = self.trading_config.get("cycle_interval_minutes", 10) * 60
+        self.market_data_manager = MarketDataManager(backtesting=self.backtesting)
+        self.execution_manager = ExecutionManager(market_data_manager=self.market_data_manager)
 
     def run(self):
         """Run the trading bot in a loop."""
@@ -39,8 +41,8 @@ class Orchestrator:
             # 1. Fetch market data
             symbol = self.trading_config.get("symbol", "BTC/USDT")
             timeframes = ["1h", "4h", "1d"]
-            candles = {tf: market_data_manager.get_latest_candles(symbol, tf) for tf in timeframes}
-            ticker = market_data_manager.get_current_quote(symbol)
+            candles = {tf: self.market_data_manager.get_latest_candles(symbol, tf) for tf in timeframes}
+            ticker = self.market_data_manager.get_current_quote(symbol)
 
             # 2. Compute indicators
             indicators = {tf: indicators_engine.get_all_indicators(candles[tf]) for tf in timeframes}
@@ -62,7 +64,7 @@ class Orchestrator:
             decision = decision_engine.decide(context)
 
             # 6. Execute the trade
-            execution_manager.execute_trade(decision)
+            self.execution_manager.execute_trade(decision)
 
             cycle.SetStatus("completed")
             cycle.SetEnded_at(datetime.now())

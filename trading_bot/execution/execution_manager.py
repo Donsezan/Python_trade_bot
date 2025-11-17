@@ -1,6 +1,7 @@
 from trading_bot.execution.ccxt_adapter import CCXTAdapter
 from trading_bot.models.decision import Decision
-from trading_bot.risk_management.risk_manager import risk_manager
+from trading_bot.risk_management.risk_manager import RiskManager
+from trading_bot.market_data.market_data_manager import MarketDataManager
 from trading_bot.persistence.sqlite_persistence import persistence, Order, Trade
 from datetime import datetime
 import time
@@ -8,9 +9,14 @@ import time
 class ExecutionManager:
     """Manages the execution of trades."""
 
-    def __init__(self):
-        """Initialize the ExecutionManager."""
+    def __init__(self, market_data_manager: MarketDataManager):
+        """
+        Initialize the ExecutionManager.
+        Args:
+            market_data_manager: An instance of MarketDataManager.
+        """
         self.exchange_adapter = CCXTAdapter()
+        self.risk_manager = RiskManager(market_data_manager)
 
     def execute_trade(self, decision: Decision):
         """
@@ -20,7 +26,7 @@ class ExecutionManager:
             decision: The trading decision to execute.
         """
         balance = self.get_balance()
-        is_valid, adjusted_decision = risk_manager.validate_decision(decision, balance.get("free", {}).get("USDT", 0))
+        is_valid, adjusted_decision = self.risk_manager.validate_decision(decision, balance.get("free", {}).get("USDT", 0))
 
         if is_valid:
             try:
@@ -73,5 +79,3 @@ class ExecutionManager:
                 persistence.save(trade)
                 break
             time.sleep(6) # Wait 6 seconds before retrying
-
-execution_manager = ExecutionManager()
