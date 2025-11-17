@@ -7,3 +7,4 @@ openai
 google-generativeai
 dashscope
 chromadb
+pandas-ta
