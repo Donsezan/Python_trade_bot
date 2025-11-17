@@ -14,7 +14,9 @@ class LLMDecisionEngine(DecisionEngineInterface):
     def __init__(self):
         """Initialize the DecisionEngine and the LLM clients based on the config."""
         self.provider = config.get_llm_provider()
-        self.llm_config = config.get_llm_config()
+        llm_config_list = config.get_llm_config()
+        self.llm_config = {cfg['provider']: cfg for cfg in llm_config_list}
+
 
         if self.provider == 'openrouter':
             self.openai_model_name = self.llm_config.get("openai", {}).get("model_name")

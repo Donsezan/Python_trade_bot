@@ -1,14 +1,19 @@
 from trading_bot.config import config
 from trading_bot.models.decision import Decision
-from trading_bot.market_data.market_data_manager import market_data_manager
+from trading_bot.market_data.market_data_manager import MarketDataManager
 from typing import Tuple
 
 class RiskManager:
     """Enforces risk management rules."""
 
-    def __init__(self):
-        """Initialize the RiskManager."""
+    def __init__(self, market_data_manager: MarketDataManager):
+        """
+        Initialize the RiskManager.
+        Args:
+            market_data_manager: An instance of MarketDataManager.
+        """
         self.risk_config = config.get_risk_management_config()
+        self.market_data_manager = market_data_manager
 
     def validate_decision(self, decision: Decision, balance: float) -> Tuple[bool, Decision]:
         """
@@ -43,7 +48,5 @@ class RiskManager:
         """
         Get the current price of a symbol.
         """
-        ticker = market_data_manager.get_current_quote(symbol)
+        ticker = self.market_data_manager.get_current_quote(symbol)
         return ticker.get("last", 0.0)
-
-risk_manager = RiskManager()
