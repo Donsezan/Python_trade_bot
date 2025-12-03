@@ -4,3 +4,4 @@ config.yaml
 bot.log
 __pycache__
 trading_bot.db
+chroma_db

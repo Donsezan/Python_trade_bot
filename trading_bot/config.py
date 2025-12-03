@@ -1,11 +1,18 @@
 import yaml
+import os
 from typing import Dict, Any
 from pathlib import Path
 
 class Config:
     """A class to manage the application's configuration."""
 
-    def __init__(self, config_path: str = 'config.yaml'):
+    def __init__(self, config_path: str = None):
+        if config_path is None:
+            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            config_path = os.environ.get('CONFIG_PATH', os.path.join(project_root, 'config.yaml'))
+        
+        print(f"DEBUG: Loading config from {config_path}")
+
         try:
             cfg_path = Path(config_path)
             if not cfg_path.is_absolute():
@@ -13,7 +20,8 @@ class Config:
             with cfg_path.open('r') as f:
                 self.config = yaml.safe_load(f)
         except FileNotFoundError:
-            raise Exception(f"Configuration file not found at {config_path}")
+            print(f"Warning: Configuration file not found at {config_path}. Using empty config.")
+            self.config = {}
         except yaml.YAMLError as e:
             raise Exception(f"Error parsing YAML file: {e}")
 

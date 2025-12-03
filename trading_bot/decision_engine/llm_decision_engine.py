@@ -14,8 +14,13 @@ class LLMDecisionEngine(DecisionEngineInterface):
     def __init__(self):
         """Initialize the DecisionEngine and the LLM clients based on the config."""
         self.provider = config.get_llm_provider()
-        llm_config_list = config.get_llm_config()
-        self.llm_config = {cfg['provider']: cfg for cfg in llm_config_list}
+        llm_config_obj = config.get_llm_config()
+        if isinstance(llm_config_obj, list):
+             self.llm_config = {cfg['provider']: cfg for cfg in llm_config_obj}
+        else:
+             self.llm_config = llm_config_obj
+        
+        print(f"DEBUG: LLM Config: {self.llm_config}")
 
 
         if self.provider == 'openrouter':
@@ -24,22 +29,52 @@ class LLMDecisionEngine(DecisionEngineInterface):
             self.qwen_model_name = self.llm_config.get("qwen", {}).get("model_name")
 
             # For OpenRouter, we can use a generic client based on the OpenAI SDK
-            self.llm_1 = openai.OpenAI(
-                base_url=self.llm_config.get("openai", {}).get("endpoint"),
-                api_key=self.llm_config.get("openai", {}).get("api_key")
-            )
-            self.llm_2 = openai.OpenAI(
-                base_url=self.llm_config.get("gemini", {}).get("endpoint"),
-                api_key=self.llm_config.get("gemini", {}).get("api_key")
-            )
-            self.llm_3 = openai.OpenAI(
-                base_url=self.llm_config.get("qwen", {}).get("endpoint"),
-                api_key=self.llm_config.get("qwen", {}).get("api_key")
-            )
+            openai_api_key = self.llm_config.get("openai", {}).get("api_key")
+            if openai_api_key:
+                self.llm_1 = openai.OpenAI(
+                    base_url=self.llm_config.get("openai", {}).get("endpoint"),
+                    api_key=openai_api_key
+                )
+            else:
+                print("Warning: OpenAI API key not found. LLM 1 will not work.")
+                self.llm_1 = None
+
+            gemini_api_key = self.llm_config.get("gemini", {}).get("api_key")
+            if gemini_api_key:
+                self.llm_2 = openai.OpenAI(
+                    base_url=self.llm_config.get("gemini", {}).get("endpoint"),
+                    api_key=gemini_api_key
+                )
+            else:
+                print("Warning: Gemini API key not found. LLM 2 will not work.")
+                self.llm_2 = None
+
+            qwen_api_key = self.llm_config.get("qwen", {}).get("api_key")
+            if qwen_api_key:
+                self.llm_3 = openai.OpenAI(
+                    base_url=self.llm_config.get("qwen", {}).get("endpoint"),
+                    api_key=qwen_api_key
+                )
+            else:
+                print("Warning: Qwen API key not found. LLM 3 will not work.")
+                self.llm_3 = None
+
         else:  # Native clients
-            self.llm_1 = openai.OpenAI(api_key=self.llm_config.get("openai", {}).get("api_key"))
-            genai.configure(api_key=self.llm_config.get("gemini", {}).get("api_key"))
-            self.gemini_model = genai.GenerativeModel('gemini-pro')
+            openai_api_key = self.llm_config.get("openai", {}).get("api_key")
+            if openai_api_key:
+                self.llm_1 = openai.OpenAI(api_key=openai_api_key)
+            else:
+                print("Warning: OpenAI API key not found. LLM 1 will not work.")
+                self.llm_1 = None
+
+            gemini_api_key = self.llm_config.get("gemini", {}).get("api_key")
+            if gemini_api_key:
+                genai.configure(api_key=gemini_api_key)
+                self.gemini_model = genai.GenerativeModel('gemini-pro')
+            else:
+                print("Warning: Gemini API key not found. Gemini model will not work.")
+                self.gemini_model = None
+
             self.qwen_api_key = self.llm_config.get("qwen", {}).get("api_key")
 
     def decide(self, context: Dict[str, Any]) -> Decision:

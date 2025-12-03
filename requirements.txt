@@ -7,4 +7,6 @@ openai
 google-generativeai
 dashscope
 chromadb
-pandas-ta
+ta
+pytest
+pytest-mock

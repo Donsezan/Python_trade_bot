@@ -1,6 +1,7 @@
 import time
 import math
 import random
+from datetime import datetime, timezone
 from typing import List, Dict, Any
 
 class MarketDataSimulator:
@@ -68,7 +69,7 @@ class MarketDataSimulator:
         return {
             'symbol': self.symbol,
             'timestamp': int(now * 1000),
-            'datetime': time.strftime('%Y-%m-%dT%H:%M:%S.%fZ', time.gmtime(now)),
+            'datetime': datetime.fromtimestamp(now, tz=timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'high': price * (1 + self.volatility * random.random() / 5),
             'low': price * (1 - self.volatility * random.random() / 5),
             'bid': price * 0.999,

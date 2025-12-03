@@ -87,5 +87,14 @@ class SQLitePersistence:
         session.commit()
         session.close()
 
+    def get_last_completed_cycle(self):
+        """Retrieve the last completed cycle."""
+        session = self.get_session()
+        try:
+            cycle = session.query(Cycle).filter_by(status='completed').order_by(Cycle.ended_at.desc()).first()
+            return cycle
+        finally:
+            session.close()
+
 # Create a global persistence instance
 persistence = SQLitePersistence()

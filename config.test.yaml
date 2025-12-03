@@ -1,0 +1,36 @@
+llm_provider: "native"
+
+native_llms:
+  openai:
+    api_key: "dummy_openai_key"
+    model_name: "gpt-3.5-turbo"
+  gemini:
+    api_key: "dummy_gemini_key"
+    model_name: "gemini-pro"
+  qwen:
+    api_key: "dummy_qwen_key"
+    model_name: "qwen-turbo"
+
+openrouter:
+  api_key: "dummy_key"
+  model: "openai/gpt-3.5-turbo"
+
+binance:
+  api_key: "dummy_api_key"
+  secret_key: "dummy_secret_key"
+
+trading:
+  symbol: "BTC/USDT"
+  cycle_interval_minutes: 10
+  risk_level: "medium"
+
+database:
+  path: "trading_bot.db"
+
+news:
+  cointelegraph:
+    url: "https://cointelegraph.com/tags/bitcoin"
+
+risk_management:
+  max_drawdown: 0.1
+  max_position_size: 0.5

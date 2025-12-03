@@ -9,13 +9,19 @@ import time
 class ExecutionManager:
     """Manages the execution of trades."""
 
-    def __init__(self, market_data_manager: MarketDataManager):
+    def __init__(self, market_data_manager: MarketDataManager, backtesting: bool = False):
         """
         Initialize the ExecutionManager.
         Args:
             market_data_manager: An instance of MarketDataManager.
+            backtesting: Whether to run in backtesting mode.
         """
-        self.exchange_adapter = CCXTAdapter()
+        if backtesting:
+            from trading_bot.execution.mock_execution_adapter import MockExecutionAdapter
+            self.exchange_adapter = MockExecutionAdapter()
+        else:
+            self.exchange_adapter = CCXTAdapter()
+            
         self.risk_manager = RiskManager(market_data_manager)
 
     def execute_trade(self, decision: Decision):

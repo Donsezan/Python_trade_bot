@@ -20,7 +20,7 @@ class Orchestrator:
         self.trading_config = config.get_trading_config()
         self.cycle_interval = self.trading_config.get("cycle_interval_minutes", 10) * 60
         self.market_data_manager = MarketDataManager(backtesting=self.backtesting)
-        self.execution_manager = ExecutionManager(market_data_manager=self.market_data_manager)
+        self.execution_manager = ExecutionManager(market_data_manager=self.market_data_manager, backtesting=self.backtesting)
 
     def run(self):
         """Run the trading bot in a loop."""
@@ -48,7 +48,9 @@ class Orchestrator:
             indicators = {tf: indicators_engine.get_all_indicators(candles[tf]) for tf in timeframes}
 
             # 3. Ingest and analyze news
-            news_articles = news_ingestor.fetch_cointelegraph_news()
+            last_cycle = persistence.get_last_completed_cycle()
+            last_run_time = last_cycle.ended_at if last_cycle else None
+            news_articles = news_ingestor.fetch_cointelegraph_news(last_run_time=last_run_time)
             news_analyzer.process_news(news_articles)
 
             # 4. Retrieve news from RAG store

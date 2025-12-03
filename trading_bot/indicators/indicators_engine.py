@@ -1,6 +1,13 @@
 from typing import Dict, Any, List
 import pandas as pd
-import pandas_ta as ta
+try:
+    import ta
+    from ta.trend import EMAIndicator, SMAIndicator, MACD
+    from ta.momentum import RSIIndicator
+    from ta.volatility import AverageTrueRange
+    from ta.volume import VolumeWeightedAveragePrice
+except ImportError:
+    ta = None
 
 class IndicatorsEngine:
     """Computes technical indicators."""
@@ -38,28 +45,38 @@ class IndicatorsEngine:
 
     def get_ema(self, df: pd.DataFrame, length: int = 12) -> float:
         """Get the Exponential Moving Average (EMA)."""
-        return df.ta.ema(length=length).iloc[-1]
+        if ta is None: return 0.0
+        indicator = EMAIndicator(close=df['close'], window=length)
+        return indicator.ema_indicator().iloc[-1]
 
     def get_sma(self, df: pd.DataFrame, length: int = 12) -> float:
         """Get the Simple Moving Average (SMA)."""
-        return df.ta.sma(length=length).iloc[-1]
+        if ta is None: return 0.0
+        indicator = SMAIndicator(close=df['close'], window=length)
+        return indicator.sma_indicator().iloc[-1]
 
     def get_rsi(self, df: pd.DataFrame, length: int = 14) -> float:
         """Get the Relative Strength Index (RSI)."""
-        return df.ta.rsi(length=length).iloc[-1]
+        if ta is None: return 50.0
+        indicator = RSIIndicator(close=df['close'], window=length)
+        return indicator.rsi().iloc[-1]
 
     def get_macd(self, df: pd.DataFrame) -> Dict[str, float]:
         """Get the Moving Average Convergence Divergence (MACD)."""
-        macd = df.ta.macd()
+        if ta is None:
+            return {"macd": 0.0, "signal": 0.0, "hist": 0.0}
+        indicator = MACD(close=df['close'])
         return {
-            "macd": macd['MACD_12_26_9'].iloc[-1],
-            "signal": macd['MACDs_12_26_9'].iloc[-1],
-            "hist": macd['MACDh_12_26_9'].iloc[-1],
+            "macd": indicator.macd().iloc[-1],
+            "signal": indicator.macd_signal().iloc[-1],
+            "hist": indicator.macd_diff().iloc[-1],
         }
 
     def get_atr(self, df: pd.DataFrame, length: int = 14) -> float:
         """Get the Average True Range (ATR)."""
-        return df.ta.atr(length=length).iloc[-1]
+        if ta is None: return 0.0
+        indicator = AverageTrueRange(high=df['high'], low=df['low'], close=df['close'], window=length)
+        return indicator.average_true_range().iloc[-1]
 
     def get_volume(self, df: pd.DataFrame) -> float:
         """Get the trading volume."""
@@ -67,6 +84,8 @@ class IndicatorsEngine:
 
     def get_vwap(self, df: pd.DataFrame) -> float:
         """Get the Volume-Weighted Average Price (VWAP)."""
-        return df.ta.vwap().iloc[-1]
+        if ta is None: return 0.0
+        indicator = VolumeWeightedAveragePrice(high=df['high'], low=df['low'], close=df['close'], volume=df['volume'])
+        return indicator.volume_weighted_average_price().iloc[-1]
 
 indicators_engine = IndicatorsEngine()
