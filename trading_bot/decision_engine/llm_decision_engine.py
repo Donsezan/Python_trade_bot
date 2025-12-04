@@ -100,7 +100,7 @@ class LLMDecisionEngine(DecisionEngineInterface):
 
     def _build_initial_prompt(self, context: Dict[str, Any]) -> str:
         """Build the initial prompt for the LLM debate."""
-        news_str = "\n".join([f"- {n.title}: {n.summary}" for n in context.get("news", [])])
+        news_str = "\n".join([f"- {n.get('title')}: {n.get('summary')}" for n in context.get("news", [])])
         return f"""
         Market Data:
         - Ticker: {context.get("ticker")}

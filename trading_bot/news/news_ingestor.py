@@ -19,10 +19,8 @@ class NewsIngestor:
         Returns:
             A list of dictionaries, where each dictionary represents a news article.
         """
-        url = self.news_config.get("cointelegraph", {}).get("url")
-        if not url:
-            return []
 
+        url = "https://cointelegraph.com/tags/bitcoin"
         try:
             response = requests.get(url)
             response.raise_for_status()
@@ -33,10 +31,9 @@ class NewsIngestor:
         soup = BeautifulSoup(response.text, "html.parser")
         articles = []
 
-        for post in soup.find_all('li', class_='posts-listing__item'):
-            title_element = post.find('h3', class_='post-card-inline__title')
+        for post in soup.find_all('article', class_='post-card-inline'):
+            title_element = post.find('span', class_='post-card-inline__title')
             link_element = post.find('a', class_='post-card-inline__figure-link')
-
             if title_element and link_element:
                 article_url = link_element['href']
                 if not article_url.startswith('http'):
@@ -52,7 +49,7 @@ class NewsIngestor:
                         article_date = article_date.replace(tzinfo=last_run_time.tzinfo)
                         
                     if article_date <= last_run_time:
-                        continue
+                        break
 
                 content = self._fetch_article_content(article_url)
 
