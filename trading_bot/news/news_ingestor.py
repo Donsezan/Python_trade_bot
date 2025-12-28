@@ -70,7 +70,7 @@ class NewsIngestor:
             response.raise_for_status()
             soup = BeautifulSoup(response.text, "html.parser")
             # This selector is simplified and might need adjustment
-            content_div = soup.find('div', class_='post-content')
+            content_div = soup.find('div', {'data-gtm-locator': 'articles'})
             return content_div.get_text(strip=True) if content_div else ""
         except requests.RequestException as e:
             print(f"Error fetching article content from {url}: {e}")

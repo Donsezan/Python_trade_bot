@@ -10,3 +10,6 @@ chromadb
 ta
 pytest
 pytest-mock
+fastapi
+uvicorn
+jinja2

@@ -6,7 +6,7 @@ from pathlib import Path
 def setup_logger():
     """Set up the logger to write to a file and the console."""
     # Go up two levels from the current file to get to the project root
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root =  os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     config_path = os.environ.get('CONFIG_PATH', os.path.join(project_root, 'config.yaml'))
     
     log_file = 'bot.log'

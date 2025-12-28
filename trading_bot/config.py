@@ -32,10 +32,7 @@ class Config:
     def get_llm_config(self) -> Dict[str, Any]:
         """Get the configuration for the selected LLM provider."""
         provider = self.get_llm_provider()
-        if provider == 'openrouter':
-            return self.config.get('openrouter', {})
-        else:
-            return self.config.get('native_llms', {})
+        return self.config.get(provider, {})
 
     def get_binance_config(self) -> Dict[str, Any]:
         """Get the Binance API configuration."""

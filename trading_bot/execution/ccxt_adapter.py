@@ -16,7 +16,10 @@ class CCXTAdapter(ExchangeAdapter):
                 'defaultType': 'spot',
             },
         })
-        self.exchange.set_sandbox_mode(True)
+        
+        # Enable sandbox mode only if specified in config
+        if binance_config.get('testnet', False):
+            self.exchange.set_sandbox_mode(True)
 
     def get_balance(self) -> Dict[str, float]:
         """Get the account balance."""

@@ -25,7 +25,8 @@ class MarketDataManager:
             'secret': binance_config.get('secret_key'),
             'options': {'defaultType': 'spot'},
         })
-        exchange.set_sandbox_mode(True)
+        if binance_config.get('sandbox', False):
+            exchange.set_sandbox_mode(True)
         return exchange
 
     def get_latest_candles(self, symbol: str, timeframe: str = '1h', limit: int = 100) -> List[List[Any]]:

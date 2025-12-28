@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Bot Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar: History -->
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <h2>History</h2>
+            </div>
+            <div class="sidebar-content" id="history-content">
+                <!-- Javascript will populate this -->
+                <div class="loading-spinner"></div>
+            </div>
+        </aside>
+
+        <!-- Main Content: Chart -->
+        <main class="main-content glass-panel">
+            <div class="chart-header">
+                <h2 id="chart-title">Market Overview</h2>
+                <div class="live-indicator">LIVE</div>
+            </div>
+            <div id="chart-container"></div>
+        </main>
+
+        <!-- Footer: Status -->
+        <footer class="footer glass-panel">
+            <div class="status-item">
+                <span class="label">Status</span>
+                <span class="value" id="status-text">--</span>
+            </div>
+            <div class="status-item">
+                <span class="label">Balance (Total)</span>
+                <span class="value" id="balance-total">--</span>
+            </div>
+            <div class="status-item">
+                <span class="label">Balance (Free)</span>
+                <span class="value" id="balance-free">--</span>
+            </div>
+            <div class="status-item">
+                <span class="label">Active Positions</span>
+                <span class="value" id="active-positions">--</span>
+            </div>
+        </footer>
+    </div>
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

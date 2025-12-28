@@ -21,6 +21,11 @@ class Orchestrator:
         self.cycle_interval = self.trading_config.get("cycle_interval_minutes", 10) * 60
         self.market_data_manager = MarketDataManager(backtesting=self.backtesting)
         self.execution_manager = ExecutionManager(market_data_manager=self.market_data_manager, backtesting=self.backtesting)
+        
+        # Initialize Dashboard
+        from trading_bot.dashboard.server import DashboardServer
+        self.dashboard = DashboardServer(self)
+        self.dashboard.run()
 
     def run(self):
         """Run the trading bot in a loop."""
