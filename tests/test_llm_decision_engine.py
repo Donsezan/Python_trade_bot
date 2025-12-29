@@ -96,5 +96,97 @@ class TestLLMDecisionEngine(unittest.TestCase):
         # OpenAI should use custom endpoint
         mock_openai.OpenAI.assert_called_with(base_url='https://custom.endpoint', api_key='key1')
 
+    @patch('trading_bot.decision_engine.llm_decision_engine.config')
+    @patch('trading_bot.decision_engine.llm_decision_engine.openai')
+    def test_decide_json_parsing(self, mock_openai, mock_config):
+        """Test decide method with JSON responses."""
+        
+        # Setup config
+        mock_config.get_llm_provider.return_value = 'openrouter_llms'
+        mock_config.get_llm_config.return_value = {
+            'openai': {'api_key': 'k1'},
+            'gemini': {'api_key': 'k2'},
+            'qwen': {'api_key': 'k3'}
+        }
+
+        # Setup mocks for LLM responses
+        # We simulate 3 rounds of debate for 3 LLMs = 9 calls max, but since we mock the clients separately or same?
+        # In init_openrouter_llms, it creates 3 separate OpenAI instances.
+        
+        # Mock instance
+        mock_client_instance = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client_instance
+        
+        # Mock completions
+        # We need a sequence of side_effects for the format:
+        # Round 1: OpenAI, Gemini, Qwen
+        # Round 2: ...
+        # Round 3: ...
+        
+        # Successful JSON responses
+        response_btc_buy = '{"Decision": "BUY", "Rating": 5, "Thinking": "Strong buy logic"}'
+        response_btc_hold = '{"Decision": "HOLD", "Rating": 3, "Thinking": "Uncertain"}'
+        response_btc_sell = '{"Decision": "SELL", "Rating": 4, "Thinking": "Bearish"}'
+        
+        # Mock the return value structure
+        mock_message = MagicMock()
+        mock_message.content = response_btc_buy
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        
+        # Simpler approach: side_effect for create
+        def side_effect(*args, **kwargs):
+            # Return different decisions based on some logic or just cycle
+            # For simplicity, let's make them all return valid JSON
+            resp = MagicMock()
+            resp.choices[0].message.content = '{"Decision": "BUY", "Rating": 4.5, "Thinking": "Consensus buy"}'
+            return resp
+
+        mock_client_instance.chat.completions.create.side_effect = side_effect
+        
+        engine = LLMDecisionEngine()
+        context = {"ticker": "BTC/USDT", "indicators": {}, "news": []}
+        
+        decision = engine.decide(context)
+        
+        self.assertEqual(decision.action, "BUY")
+        self.assertEqual(decision.confidence, 4.5/5.0)
+        self.assertIn("Votes", decision.reason)
+
+    @patch('trading_bot.decision_engine.llm_decision_engine.config')
+    @patch('trading_bot.decision_engine.llm_decision_engine.openai')
+    def test_decide_json_parsing_resilience(self, mock_openai, mock_config):
+        """Test decide method resilience to markdown blocks and mixed content."""
+        
+        mock_config.get_llm_provider.return_value = 'openrouter_llms'
+        mock_config.get_llm_config.return_value = {'openai': {'api_key': 'k1'}}
+        
+        mock_client_instance = MagicMock()
+        mock_openai.OpenAI.return_value = mock_client_instance
+        
+        # Return a response with markdown code blocks
+        markdown_response = 'Here is the JSON:\n```json\n{"Decision": "SELL", "Rating": 5, "Thinking": "Dump it"}\n```'
+        
+        mock_resp = MagicMock()
+        mock_resp.choices[0].message.content = markdown_response
+        mock_client_instance.chat.completions.create.return_value = mock_resp
+        
+        engine = LLMDecisionEngine()
+        # Mock only 1 LLM enabled effectively for this simpler test, 
+        # but the engine tries to init all.
+        # Just override the other llms to None manually or let them fail gracefully if not configured 
+        # (initial test setup provides only openai config, so others are None and will return Errors)
+        
+        # If others are None, they return "Error...". The parser handles them logging warnings but skipping.
+        # OpenAI one returns the SELL decision.
+        
+        context = {"ticker": "BTC/USDT", "indicators": {}, "news": []}
+        decision = engine.decide(context)
+        
+        self.assertEqual(decision.action, "SELL")
+        self.assertEqual(decision.confidence, 1.0) # 5/5
+
 if __name__ == '__main__':
     unittest.main()
